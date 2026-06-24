@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quiz: Capitales del Perú</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #d41b1b, #8b0000);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            max-width: 750px;
+            width: 100%;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+            text-align: center;
+        }
+
+        h1 {
+            color: #8b0000;
+            font-size: 2rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        h1 img {
+            width: 40px;
+            height: 40px;
+        }
+
+        .subtitle {
+            color: #555;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+
+        /* Configuración de preguntas */
+        .config {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+            background: #f2f2f2;
+            padding: 12px 20px;
+            border-radius: 12px;
+        }
+
+        .config label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .config select {
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+            background: white;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .config select:focus {
+            border-color: #8b0000;
+        }
+
+        .btn-start {
+            background: #8b0000;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 1rem;
+        }
+
+        .btn-start:hover {
+            background: #a00000;
+            transform: scale(1.05);
+        }
+
+        /* Progreso */
+        .progress {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f9f9f9;
+            padding: 12px 18px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 5px solid #8b0000;
+        }
+
+        .progress .counter {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .progress .score {
+            display: flex;
+            gap: 20px;
+            font-weight: 600;
+        }
+
+        .score .correct {
+            color: #1a8a1a;
+        }
+        .score .incorrect {
+            color: #b22222;
+        }
+
+        /* Pregunta */
+        .question-box {
+            background: #fafafa;
+            padding: 25px 20px;
+            border-radius: 14px;
+            margin-bottom: 25px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .question-box h2 {
+            font-size: 1.5rem;
+            color: #222;
+            margin-bottom: 5px;
+        }
+
+        .question-box .dept {
+            font-size: 1rem;
+            color: #666;
+            font-weight: normal;
+        }
+
+        /* Alternativas */
+        .alternatives {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        @media (max-width: 550px) {
+            .alternatives {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .alt-btn {
+            background: #f0f0f0;
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            padding: 14px 10px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.25s;
+            color: #222;
+            text-align: center;
+        }
+
+        .alt-btn:hover:not(.disabled) {
+            background: #e0e0e0;
+            border-color: #8b0000;
+            transform: scale(1.02);
+        }
+
+        .alt-btn.correct {
+            background: #b7e4b7;
+            border-color: #1a8a1a;
+            color: #0a5a0a;
+        }
+
+        .alt-btn.incorrect {
+            background: #f8d7da;
+            border-color: #b22222;
+            color: #7a1a1a;
+        }
+
+        .alt-btn.disabled {
+            cursor: default;
+            opacity: 0.8;
+        }
+
+        .alt-btn.reveal-correct {
+            background: #b7e4b7;
+            border-color: #1a8a1a;
+        }
+
+        /* Resultado final */
+        .result-box {
+            background: #f0f0f0;
+            padding: 25px;
+            border-radius: 14px;
+            margin-top: 10px;
+            border: 2px solid #8b0000;
+        }
+
+        .result-box h2 {
+            color: #8b0000;
+            font-size: 2rem;
+        }
+
+        .result-box .final-score {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #222;
+        }
+
+        .result-box .message {
+            font-size: 1.2rem;
+            margin: 10px 0 20px;
+            color: #444;
+        }
+
+        .btn-restart {
+            background: #8b0000;
+            color: white;
+            border: none;
+            padding: 14px 40px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-restart:hover {
+            background: #a00000;
+            transform: scale(1.05);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 0.8rem;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🇵🇪 Capitales del Perú</h1>
+    <p class="subtitle">Adivina la capital de cada departamento</p>
+
+    <!-- Configuración -->
+    <div class="config" id="configPanel">
+        <label for="numQuestions">Número de preguntas:</label>
+        <select id="numQuestions">
+            <option value="10">10</option>
+            <option value="15" selected>15</option>
+            <option value="20">20</option>
+        </select>
+        <button class="btn-start" id="startQuizBtn">▶ Iniciar Quiz</button>
+    </div>
+
+    <!-- Panel del juego -->
+    <div id="gamePanel" class="hidden">
+        <!-- Progreso -->
+        <div class="progress">
+            <span class="counter" id="progressCounter">Pregunta 1 / 15</span>
+            <span class="score">
+                <span class="correct">✅ <span id="correctCount">0</span></span>
+                <span class="incorrect">❌ <span id="incorrectCount">0</span></span>
+            </span>
+        </div>
+
+        <!-- Pregunta -->
+        <div class="question-box">
+            <h2 id="questionText">¿Cuál es la capital de <span class="dept" id="deptName">Lima</span>?</h2>
+        </div>
+
+        <!-- Alternativas -->
+        <div class="alternatives" id="alternativesContainer">
+            <button class="alt-btn" data-index="0">Lima</button>
+            <button class="alt-btn" data-index="1">Callao</button>
+            <button class="alt-btn" data-index="2">Arequipa</button>
+            <button class="alt-btn" data-index="3">Cusco</button>
+            <button class="alt-btn" data-index="4">Trujillo</button>
+            <button class="alt-btn" data-index="5">Iquitos</button>
+        </div>
+
+        <!-- Botón de reinicio rápido -->
+        <button class="btn-restart" id="resetGameBtn" style="background:#6c757d; padding: 10px 25px; font-size: 0.95rem;">
+            🔄 Reiniciar juego
+        </button>
+    </div>
+
+    <!-- Resultado final -->
+    <div id="resultPanel" class="result-box hidden">
+        <h2>🏁 ¡Quiz finalizado!</h2>
+        <div class="final-score" id="finalScore">10 / 15</div>
+        <div class="message" id="finalMessage">¡Buen trabajo!</div>
+        <button class="btn-restart" id="restartFromResultBtn">🔄 Jugar de nuevo</button>
+    </div>
+
+    <div class="footer">Hecho con ❤️ para poner a prueba tus conocimientos</div>
+</div>
+
+<script>
+    // ------------------------------------------------------------
+    // DATOS: 24 departamentos del Perú y sus capitales
+    // ------------------------------------------------------------
+    const DEPARTAMENTOS = [
+        { dept: "Amazonas", capital: "Chachapoyas" },
+        { dept: "Áncash", capital: "Huaraz" },
+        { dept: "Apurímac", capital: "Abancay" },
+        { dept: "Arequipa", capital: "Arequipa" },
+        { dept: "Ayacucho", capital: "Ayacucho" },
+        { dept: "Cajamarca", capital: "Cajamarca" },
+        { dept: "Callao", capital: "Callao" },
+        { dept: "Cusco", capital: "Cusco" },
+        { dept: "Huancavelica", capital: "Huancavelica" },
+        { dept: "Huánuco", capital: "Huánuco" },
+        { dept: "Ica", capital: "Ica" },
+        { dept: "Junín", capital: "Huancayo" },
+        { dept: "La Libertad", capital: "Trujillo" },
+        { dept: "Lambayeque", capital: "Chiclayo" },
+        { dept: "Lima", capital: "Lima" },
+        { dept: "Loreto", capital: "Iquitos" },
+        { dept: "Madre de Dios", capital: "Puerto Maldonado" },
+        { dept: "Moquegua", capital: "Moquegua" },
+        { dept: "Pasco", capital: "Cerro de Pasco" },
+        { dept: "Piura", capital: "Piura" },
+        { dept: "Puno", capital: "Puno" },
+        { dept: "San Martín", capital: "Moyobamba" },
+        { dept: "Tacna", capital: "Tacna" },
+        { dept: "Tumbes", capital: "Tumbes" },
+        { dept: "Ucayali", capital: "Pucallpa" }
+    ];
+
+    // ------------------------------------------------------------
+    // ESTADO DEL JUEGO
+    // ------------------------------------------------------------
+    let allQuestions = [];               // Array de objetos { dept, capital }
+    let currentQuestions = [];           // Preguntas seleccionadas para esta ronda (mezcladas)
+    let currentIndex = 0;
+    let correctAnswers = 0;
+    let incorrectAnswers = 0;
+    let totalQuestions = 15;
+    let isAnswered = false;
+    let quizFinished = false;
+
+    // ------------------------------------------------------------
+    // DOM REFERENCIAS
+    // ------------------------------------------------------------
+    const configPanel = document.getElementById('configPanel');
+    const gamePanel = document.getElementById('gamePanel');
+    const resultPanel = document.getElementById('resultPanel');
+    const startBtn = document.getElementById('startQuizBtn');
+    const resetGameBtn = document.getElementById('resetGameBtn');
+    const restartResultBtn = document.getElementById('restartFromResultBtn');
+    const numQuestionsSelect = document.getElementById('numQuestions');
+    const progressCounter = document.getElementById('progressCounter');
+    const correctCountSpan = document.getElementById('correctCount');
+    const incorrectCountSpan = document.getElementById('incorrectCount');
+    const questionText = document.getElementById('questionText');
+    const deptNameSpan = document.getElementById('deptName');
+    const alternativesContainer = document.getElementById('alternativesContainer');
+    const finalScore = document.getElementById('finalScore');
+    const finalMessage = document.getElementById('finalMessage');
+
+    // ------------------------------------------------------------
+    // FUNCIONES AUXILIARES
+    // ------------------------------------------------------------
+    function shuffleArray(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    // Obtener todas las capitales (para generar distractores)
+    function getAllCapitals() {
+        return DEPARTAMENTOS.map(d => d.capital);
+    }
+
+    // Mezcla y selecciona N preguntas únicas de todos los departamentos
+    function selectRandomQuestions(n) {
+        const shuffled = shuffleArray([...DEPARTAMENTOS]);
+        return shuffled.slice(0, n);
+    }
+
+    // Genera 6 alternativas: 1 correcta + 5 incorrectas únicas (distintas a la correcta)
+    function generateAlternatives(correctCapital, allCapitals) {
+        // Filtramos para excluir la capital correcta
+        const pool = allCapitals.filter(c => c !== correctCapital);
+        // Mezclamos y tomamos 5
+        const shuffledPool = shuffleArray([...pool]);
+        const incorrects = shuffledPool.slice(0, 5);
+        // Si por casualidad no hay suficientes (no debería pasar con 24), rellenamos
+        while (incorrects.length < 5) {
+            incorrects.push('---');
+        }
+        // Creamos el array con las 6 y lo mezclamos
+        let options = [correctCapital, ...incorrects];
+        return shuffleArray(options);
+    }
+
+    // ------------------------------------------------------------
+    // RENDERIZAR PREGUNTA ACTUAL
+    // ------------------------------------------------------------
+    function renderQuestion() {
+        if (currentIndex >= currentQuestions.length) {
+            finishQuiz();
+            return;
+        }
+
+        const q = currentQuestions[currentIndex];
+        deptNameSpan.textContent = q.dept;
+        questionText.innerHTML = `¿Cuál es la capital de <span class="dept">${q.dept}</span>?`;
+
+        // Actualizar progreso
+        progressCounter.textContent = `Pregunta ${currentIndex + 1} / ${currentQuestions.length}`;
+
+        // Generar alternativas
+        const allCapitals = getAllCapitals();
+        const options = generateAlternatives(q.capital, allCapitals);
+
+        // Limpiar y crear botones
+        alternativesContainer.innerHTML = '';
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'alt-btn';
+            btn.textContent = opt;
+            btn.dataset.correct = (opt === q.capital) ? 'true' : 'false';
+            btn.addEventListener('click', onAlternativeClick);
+            alternativesContainer.appendChild(btn);
+        });
+
+        isAnswered = false;
+        quizFinished = false;
+    }
+
+    // ------------------------------------------------------------
+    // MANEJADOR DE CLICK EN ALTERNATIVA
+    // ------------------------------------------------------------
+    function onAlternativeClick(e) {
+        if (isAnswered || quizFinished) return;
+
+        const btn = e.currentTarget;
+        const isCorrect = btn.dataset.correct === 'true';
+        const allBtns = document.querySelectorAll('.alt-btn');
+
+        // Deshabilitar todos los botones
+        allBtns.forEach(b => b.classList.add('disabled'));
+
+        // Marcar la seleccionada
+        if (isCorrect) {
+            btn.classList.add('correct');
+            correctAnswers++;
+        } else {
+            btn.classList.add('incorrect');
+            incorrectAnswers++;
+            // Revelar cuál era la correcta
+            allBtns.forEach(b => {
+                if (b.dataset.correct === 'true') {
+                    b.classList.add('reveal-correct');
+                }
+            });
+        }
+
+        // Actualizar contadores
+        correctCountSpan.textContent = correctAnswers;
+        incorrectCountSpan.textContent = incorrectAnswers;
+
+        isAnswered = true;
+
+        // Avanzar después de 1 segundo
+        setTimeout(() => {
+            currentIndex++;
+            if (currentIndex < currentQuestions.length) {
+                renderQuestion();
+            } else {
+                finishQuiz();
+            }
+        }, 1000);
+    }
+
+    // ------------------------------------------------------------
+    // FINALIZAR QUIZ
+    // ------------------------------------------------------------
+    function finishQuiz() {
+        quizFinished = true;
+        gamePanel.classList.add('hidden');
+        resultPanel.classList.remove('hidden');
+
+        const total = currentQuestions.length;
+        finalScore.textContent = `${correctAnswers} / ${total}`;
+
+        // Mensaje según desempeño
+        const pct = correctAnswers / total;
+        let msg = '';
+        if (pct >= 0.9) msg = '🌟 ¡Excelente! Eres un experto en geografía peruana.';
+        else if (pct >= 0.7) msg = '👏 ¡Muy bien! Tienes un gran conocimiento.';
+        else if (pct >= 0.5) msg = '📖 No está mal, pero puedes mejorar. ¡Sigue practicando!';
+        else msg = '😅 ¡Ánimo! Repasa las capitales y vuelve a intentarlo.';
+        finalMessage.textContent = msg;
+    }
+
+    // ------------------------------------------------------------
+    // INICIAR QUIZ
+    // ------------------------------------------------------------
+    function startQuiz() {
+        // Ocultar paneles
+        configPanel.classList.add('hidden');
+        resultPanel.classList.add('hidden');
+        gamePanel.classList.remove('hidden');
+
+        // Resetear contadores
+        correctAnswers = 0;
+        incorrectAnswers = 0;
+        currentIndex = 0;
+        isAnswered = false;
+        quizFinished = false;
+        correctCountSpan.textContent = '0';
+        incorrectCountSpan.textContent = '0';
+
+        // Obtener cantidad de preguntas
+        totalQuestions = parseInt(numQuestionsSelect.value, 10);
+
+        // Seleccionar preguntas aleatorias
+        const selected = selectRandomQuestions(totalQuestions);
+        currentQuestions = selected;
+
+        // Renderizar primera pregunta
+        renderQuestion();
+    }
+
+    // ------------------------------------------------------------
+    // REINICIAR (volver a configuración)
+    // ------------------------------------------------------------
+    function resetToConfig() {
+        configPanel.classList.remove('hidden');
+        gamePanel.classList.add('hidden');
+        resultPanel.classList.add('hidden');
+        // Reiniciar contadores visuales
+        correctCountSpan.textContent = '0';
+        incorrectCountSpan.textContent = '0';
+        progressCounter.textContent = 'Pregunta 0 / 0';
+    }
+
+    // ------------------------------------------------------------
+    // EVENT LISTENERS
+    // ------------------------------------------------------------
+    startBtn.addEventListener('click', startQuiz);
+    resetGameBtn.addEventListener('click', resetToConfig);
+    restartResultBtn.addEventListener('click', resetToConfig);
+
+    // Inicio: mostramos configuración por defecto
+    resetToConfig();
+</script>
+
+</body>
+</html>
