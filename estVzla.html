@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quiz: Estados de Venezuela</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #00247D, #0033A0);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            max-width: 800px;
+            width: 100%;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+
+        h1 {
+            color: #00247D;
+            font-size: 2rem;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        h1 span {
+            font-size: 2.2rem;
+        }
+
+        .subtitle {
+            color: #555;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+
+        .bandera {
+            width: 60px;
+            height: 40px;
+            border-radius: 4px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        /* Configuración */
+        .config {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+            background: #f0f4f8;
+            padding: 12px 20px;
+            border-radius: 12px;
+        }
+
+        .config label {
+            font-weight: 600;
+            color: #00247D;
+        }
+
+        .config select {
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+            background: white;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .config select:focus {
+            border-color: #00247D;
+        }
+
+        .btn-start {
+            background: #00247D;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 1rem;
+        }
+
+        .btn-start:hover {
+            background: #0033A0;
+            transform: scale(1.05);
+        }
+
+        /* Progreso */
+        .progress {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f0f4f8;
+            padding: 12px 18px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 5px solid #00247D;
+        }
+
+        .progress .counter {
+            font-weight: bold;
+            color: #00247D;
+        }
+
+        .progress .score {
+            display: flex;
+            gap: 20px;
+            font-weight: 600;
+        }
+
+        .score .correct {
+            color: #1a8a1a;
+        }
+        .score .incorrect {
+            color: #b22222;
+        }
+
+        /* Pregunta */
+        .question-box {
+            background: #f8faff;
+            padding: 25px 20px;
+            border-radius: 14px;
+            margin-bottom: 25px;
+            border: 1px solid #dde4ec;
+        }
+
+        .question-box h2 {
+            font-size: 1.5rem;
+            color: #00247D;
+            margin-bottom: 5px;
+        }
+
+        .question-box .state {
+            font-size: 1.1rem;
+            color: #0033A0;
+            font-weight: 600;
+        }
+
+        /* Alternativas - 6 columnas en desktop */
+        .alternatives {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        @media (min-width: 750px) {
+            .alternatives {
+                grid-template-columns: repeat(6, 1fr);
+            }
+        }
+
+        @media (max-width: 749px) and (min-width: 500px) {
+            .alternatives {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 499px) {
+            .alternatives {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .alt-btn {
+            background: #f0f4f8;
+            border: 2px solid #dde4ec;
+            border-radius: 12px;
+            padding: 12px 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.25s;
+            color: #00247D;
+            text-align: center;
+            word-break: break-word;
+        }
+
+        .alt-btn:hover:not(.disabled) {
+            background: #e0e8f0;
+            border-color: #00247D;
+            transform: scale(1.03);
+        }
+
+        .alt-btn.correct {
+            background: #b7e4b7;
+            border-color: #1a8a1a;
+            color: #0a5a0a;
+        }
+
+        .alt-btn.incorrect {
+            background: #f8d7da;
+            border-color: #b22222;
+            color: #7a1a1a;
+        }
+
+        .alt-btn.disabled {
+            cursor: default;
+            opacity: 0.7;
+        }
+
+        .alt-btn.reveal-correct {
+            background: #b7e4b7;
+            border-color: #1a8a1a;
+        }
+
+        /* Resultado */
+        .result-box {
+            background: #f0f4f8;
+            padding: 25px;
+            border-radius: 14px;
+            margin-top: 10px;
+            border: 2px solid #00247D;
+        }
+
+        .result-box h2 {
+            color: #00247D;
+            font-size: 2rem;
+        }
+
+        .result-box .final-score {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #00247D;
+        }
+
+        .result-box .message {
+            font-size: 1.2rem;
+            margin: 10px 0 20px;
+            color: #333;
+        }
+
+        .btn-restart {
+            background: #00247D;
+            color: white;
+            border: none;
+            padding: 14px 40px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-restart:hover {
+            background: #0033A0;
+            transform: scale(1.05);
+        }
+
+        .btn-restart.secondary {
+            background: #6c757d;
+            padding: 10px 25px;
+            font-size: 0.95rem;
+        }
+
+        .btn-restart.secondary:hover {
+            background: #5a6268;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 0.8rem;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>
+        <span>🇻🇪</span> Estados de Venezuela
+    </h1>
+    <p class="subtitle">Adivina la capital de cada estado venezolano</p>
+
+    <!-- Configuración -->
+    <div class="config" id="configPanel">
+        <label for="numQuestions">Número de preguntas:</label>
+        <select id="numQuestions">
+            <option value="10">10</option>
+            <option value="15" selected>15</option>
+            <option value="20">20</option>
+        </select>
+        <button class="btn-start" id="startQuizBtn">▶ Iniciar Quiz</button>
+    </div>
+
+    <!-- Panel del juego -->
+    <div id="gamePanel" class="hidden">
+        <!-- Progreso -->
+        <div class="progress">
+            <span class="counter" id="progressCounter">Pregunta 1 / 15</span>
+            <span class="score">
+                <span class="correct">✅ <span id="correctCount">0</span></span>
+                <span class="incorrect">❌ <span id="incorrectCount">0</span></span>
+            </span>
+        </div>
+
+        <!-- Pregunta -->
+        <div class="question-box">
+            <h2>¿Cuál es la capital de <span class="state" id="stateName">Zulia</span>?</h2>
+        </div>
+
+        <!-- Alternativas -->
+        <div class="alternatives" id="alternativesContainer">
+            <button class="alt-btn" data-index="0">Maracaibo</button>
+            <button class="alt-btn" data-index="1">Valencia</button>
+            <button class="alt-btn" data-index="2">Barquisimeto</button>
+            <button class="alt-btn" data-index="3">Caracas</button>
+            <button class="alt-btn" data-index="4">Mérida</button>
+            <button class="alt-btn" data-index="5">San Cristóbal</button>
+        </div>
+
+        <!-- Botón de reinicio rápido -->
+        <button class="btn-restart secondary" id="resetGameBtn">🔄 Reiniciar juego</button>
+    </div>
+
+    <!-- Resultado final -->
+    <div id="resultPanel" class="result-box hidden">
+        <h2>🏁 ¡Quiz finalizado!</h2>
+        <div class="final-score" id="finalScore">10 / 15</div>
+        <div class="message" id="finalMessage">¡Buen trabajo!</div>
+        <button class="btn-restart" id="restartFromResultBtn">🔄 Jugar de nuevo</button>
+    </div>
+
+    <div class="footer">🇻🇪 24 estados · 6 alternativas por pregunta</div>
+</div>
+
+<script>
+    // ------------------------------------------------------------
+    // DATOS: 24 estados de Venezuela (incluyendo el Distrito Capital)
+    // ------------------------------------------------------------
+    const ESTADOS = [
+        { state: "Amazonas", capital: "Puerto Ayacucho" },
+        { state: "Anzoátegui", capital: "Barcelona" },
+        { state: "Apure", capital: "San Fernando de Apure" },
+        { state: "Aragua", capital: "Maracay" },
+        { state: "Barinas", capital: "Barinas" },
+        { state: "Bolívar", capital: "Ciudad Bolívar" },
+        { state: "Carabobo", capital: "Valencia" },
+        { state: "Cojedes", capital: "San Carlos" },
+        { state: "Delta Amacuro", capital: "Tucupita" },
+        { state: "Distrito Capital", capital: "Caracas" },  // Caracas incluida
+        { state: "Falcón", capital: "Coro" },
+        { state: "Guárico", capital: "San Juan de los Morros" },
+        { state: "La Guaira", capital: "La Guaira" },
+        { state: "Lara", capital: "Barquisimeto" },
+        { state: "Mérida", capital: "Mérida" },
+        { state: "Miranda", capital: "Los Teques" },
+        { state: "Monagas", capital: "Maturín" },
+        { state: "Nueva Esparta", capital: "La Asunción" },
+        { state: "Portuguesa", capital: "Guanare" },
+        { state: "Sucre", capital: "Cumaná" },
+        { state: "Táchira", capital: "San Cristóbal" },
+        { state: "Trujillo", capital: "Trujillo" },
+        { state: "Yaracuy", capital: "San Felipe" },
+        { state: "Zulia", capital: "Maracaibo" }
+    ];
+
+    // ------------------------------------------------------------
+    // ESTADO DEL JUEGO
+    // ------------------------------------------------------------
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let correctAnswers = 0;
+    let incorrectAnswers = 0;
+    let totalQuestions = 15;
+    let isAnswered = false;
+    let quizFinished = false;
+
+    // ------------------------------------------------------------
+    // DOM REFERENCIAS
+    // ------------------------------------------------------------
+    const configPanel = document.getElementById('configPanel');
+    const gamePanel = document.getElementById('gamePanel');
+    const resultPanel = document.getElementById('resultPanel');
+    const startBtn = document.getElementById('startQuizBtn');
+    const resetGameBtn = document.getElementById('resetGameBtn');
+    const restartResultBtn = document.getElementById('restartFromResultBtn');
+    const numQuestionsSelect = document.getElementById('numQuestions');
+    const progressCounter = document.getElementById('progressCounter');
+    const correctCountSpan = document.getElementById('correctCount');
+    const incorrectCountSpan = document.getElementById('incorrectCount');
+    const stateNameSpan = document.getElementById('stateName');
+    const alternativesContainer = document.getElementById('alternativesContainer');
+    const finalScore = document.getElementById('finalScore');
+    const finalMessage = document.getElementById('finalMessage');
+
+    // ------------------------------------------------------------
+    // FUNCIONES AUXILIARES
+    // ------------------------------------------------------------
+    function shuffleArray(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    function getAllCapitals() {
+        return ESTADOS.map(e => e.capital);
+    }
+
+    function selectRandomQuestions(n) {
+        const shuffled = shuffleArray([...ESTADOS]);
+        return shuffled.slice(0, n);
+    }
+
+    function generateAlternatives(correctCapital, allCapitals) {
+        const pool = allCapitals.filter(c => c !== correctCapital);
+        const shuffledPool = shuffleArray([...pool]);
+        const incorrects = shuffledPool.slice(0, 5);
+        while (incorrects.length < 5) {
+            incorrects.push('---');
+        }
+        let options = [correctCapital, ...incorrects];
+        return shuffleArray(options);
+    }
+
+    // ------------------------------------------------------------
+    // RENDERIZAR PREGUNTA
+    // ------------------------------------------------------------
+    function renderQuestion() {
+        if (currentIndex >= currentQuestions.length) {
+            finishQuiz();
+            return;
+        }
+
+        const q = currentQuestions[currentIndex];
+        stateNameSpan.textContent = q.state;
+
+        progressCounter.textContent = `Pregunta ${currentIndex + 1} / ${currentQuestions.length}`;
+
+        const allCapitals = getAllCapitals();
+        const options = generateAlternatives(q.capital, allCapitals);
+
+        alternativesContainer.innerHTML = '';
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'alt-btn';
+            btn.textContent = opt;
+            btn.dataset.correct = (opt === q.capital) ? 'true' : 'false';
+            btn.addEventListener('click', onAlternativeClick);
+            alternativesContainer.appendChild(btn);
+        });
+
+        isAnswered = false;
+        quizFinished = false;
+    }
+
+    // ------------------------------------------------------------
+    // MANEJADOR DE CLICK
+    // ------------------------------------------------------------
+    function onAlternativeClick(e) {
+        if (isAnswered || quizFinished) return;
+
+        const btn = e.currentTarget;
+        const isCorrect = btn.dataset.correct === 'true';
+        const allBtns = document.querySelectorAll('.alt-btn');
+
+        allBtns.forEach(b => b.classList.add('disabled'));
+
+        if (isCorrect) {
+            btn.classList.add('correct');
+            correctAnswers++;
+        } else {
+            btn.classList.add('incorrect');
+            incorrectAnswers++;
+            allBtns.forEach(b => {
+                if (b.dataset.correct === 'true') {
+                    b.classList.add('reveal-correct');
+                }
+            });
+        }
+
+        correctCountSpan.textContent = correctAnswers;
+        incorrectCountSpan.textContent = incorrectAnswers;
+
+        isAnswered = true;
+
+        setTimeout(() => {
+            currentIndex++;
+            if (currentIndex < currentQuestions.length) {
+                renderQuestion();
+            } else {
+                finishQuiz();
+            }
+        }, 1000);
+    }
+
+    // ------------------------------------------------------------
+    // FINALIZAR
+    // ------------------------------------------------------------
+    function finishQuiz() {
+        quizFinished = true;
+        gamePanel.classList.add('hidden');
+        resultPanel.classList.remove('hidden');
+
+        const total = currentQuestions.length;
+        finalScore.textContent = `${correctAnswers} / ${total}`;
+
+        const pct = correctAnswers / total;
+        let msg = '';
+        if (pct >= 0.9) msg = '🌟 ¡Excelente! Eres un experto en geografía venezolana.';
+        else if (pct >= 0.7) msg = '👏 ¡Muy bien! Conoces muy bien los estados de Venezuela.';
+        else if (pct >= 0.5) msg = '📖 No está mal, pero puedes mejorar. ¡Sigue practicando!';
+        else msg = '😅 ¡Ánimo! Repasa las capitales y vuelve a intentarlo.';
+        finalMessage.textContent = msg;
+    }
+
+    // ------------------------------------------------------------
+    // INICIAR QUIZ
+    // ------------------------------------------------------------
+    function startQuiz() {
+        configPanel.classList.add('hidden');
+        resultPanel.classList.add('hidden');
+        gamePanel.classList.remove('hidden');
+
+        correctAnswers = 0;
+        incorrectAnswers = 0;
+        currentIndex = 0;
+        isAnswered = false;
+        quizFinished = false;
+        correctCountSpan.textContent = '0';
+        incorrectCountSpan.textContent = '0';
+
+        totalQuestions = parseInt(numQuestionsSelect.value, 10);
+        currentQuestions = selectRandomQuestions(totalQuestions);
+        renderQuestion();
+    }
+
+    // ------------------------------------------------------------
+    // REINICIAR
+    // ------------------------------------------------------------
+    function resetToConfig() {
+        configPanel.classList.remove('hidden');
+        gamePanel.classList.add('hidden');
+        resultPanel.classList.add('hidden');
+        correctCountSpan.textContent = '0';
+        incorrectCountSpan.textContent = '0';
+        progressCounter.textContent = 'Pregunta 0 / 0';
+    }
+
+    // ------------------------------------------------------------
+    // EVENT LISTENERS
+    // ------------------------------------------------------------
+    startBtn.addEventListener('click', startQuiz);
+    resetGameBtn.addEventListener('click', resetToConfig);
+    restartResultBtn.addEventListener('click', resetToConfig);
+
+    resetToConfig();
+</script>
+</body>
+</html>
