@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+  html, body {
+    margin: 0; padding: 0; height: 100%; width: 100%;
+    background: #0d0f1a;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    overflow: hidden;
+  }
+  #app {
+    width: 100%;
+    max-width: 480px;
+    height: 100vh;
+    aspect-ratio: 9/16;
+    margin: 0 auto;
+    background: linear-gradient(160deg, #1a1f3a 0%, #0d0f1a 60%, #1a0f2a 100%);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ---------- MENU ---------- */
+  #menu {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 24px;
+    text-align: center;
+  }
+  #menu h1 {
+    color: #fff;
+    font-size: 28px;
+    margin: 0 0 4px;
+    text-shadow: 0 0 20px rgba(255,80,80,0.6);
+  }
+  #menu p.sub {
+    color: #9aa0c3;
+    font-size: 13px;
+    margin: 0 0 10px;
+    line-height: 1.5;
+    max-width: 320px;
+  }
+  .duration-row {
+    display: flex;
+    gap: 10px;
+  }
+  .dur-btn {
+    background: #232852;
+    border: 2px solid #3a4080;
+    color: #fff;
+    padding: 12px 18px;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .dur-btn.selected {
+    background: linear-gradient(135deg, #ff4d6d, #c9184a);
+    border-color: #ff4d6d;
+    box-shadow: 0 0 18px rgba(255,77,109,0.5);
+  }
+  #startBtn {
+    margin-top: 14px;
+    background: linear-gradient(135deg, #4ade80, #16a34a);
+    border: none;
+    color: #06210f;
+    padding: 16px 48px;
+    border-radius: 30px;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(74,222,128,0.4);
+  }
+  #startBtn:active { transform: scale(0.96); }
+
+  .legend {
+    display: flex;
+    gap: 18px;
+    margin-top: 10px;
+    color: #c5c9e8;
+    font-size: 12px;
+    align-items: center;
+  }
+  .legend-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .legend-item svg { width: 40px; height: 40px; }
+
+  /* ---------- HUD ---------- */
+  #hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .hud-box {
+    background: rgba(255,255,255,0.07);
+    border-radius: 10px;
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 64px;
+    justify-content: center;
+  }
+  #timeBox { color: #7dd3fc; }
+  #errBox { color: #fb7185; }
+  #scoreBox { color: #4ade80; }
+
+  /* ---------- GRID ---------- */
+  #gridWrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 10px 14px;
+  }
+  #grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(5, 1fr);
+    gap: 6px;
+    width: 100%;
+    height: 100%;
+  }
+  .card {
+    position: relative;
+    background: #161a30;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 2px #2a2f55;
+  }
+  .card-inner {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    transition: transform 0.25s ease;
+  }
+  .card.flipped .card-inner { transform: rotateY(180deg); }
+  .face-side, .back-side {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .back-side {
+    background: linear-gradient(135deg, #2a2f55, #1a1e3a);
+  }
+  .back-side::after {
+    content: "?";
+    color: #4a5090;
+    font-size: 20px;
+    font-weight: 900;
+  }
+  .face-side {
+    transform: rotateY(180deg);
+    background: #fff;
+    transition: background 0.15s;
+  }
+  .face-side.good-bg {
+    background: radial-gradient(circle at 50% 35%, #eafbf0 0%, #cdf3da 70%, #9fe6b8 100%);
+    box-shadow: inset 0 0 0 3px #22c55e;
+  }
+  .face-side.bad-bg {
+    background: radial-gradient(circle at 50% 35%, #4a0f16 0%, #2a0810 70%, #150408 100%);
+    box-shadow: inset 0 0 0 3px #ef4444;
+  }
+  .face-side svg { width: 92%; height: 92%; }
+  .card.hit-good { box-shadow: inset 0 0 0 3px #4ade80; }
+  .card.hit-bad-correct { box-shadow: inset 0 0 0 3px #4ade80; }
+  .card.hit-bad-missed { box-shadow: inset 0 0 0 3px #fb7185; }
+  .card.hit-good-wrong { box-shadow: inset 0 0 0 3px #fb7185; }
+
+  .timer-ring {
+    position: absolute;
+    top: 3px; right: 3px;
+    width: 16px; height: 16px;
+    z-index: 5;
+  }
+
+  /* ---------- END SCREEN ---------- */
+  #endScreen {
+    position: absolute;
+    inset: 0;
+    background: rgba(10,10,20,0.92);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    color: #fff;
+    text-align: center;
+    padding: 30px;
+    z-index: 50;
+  }
+  #endScreen h2 { font-size: 26px; margin: 0; }
+  .result-row {
+    display: flex;
+    gap: 24px;
+    margin: 10px 0;
+  }
+  .result-item { display: flex; flex-direction: column; align-items: center; }
+  .result-item .num { font-size: 30px; font-weight: 800; }
+  .result-item .lab { font-size: 12px; color: #9aa0c3; margin-top: 2px; }
+  #restartBtn {
+    background: linear-gradient(135deg, #ff4d6d, #c9184a);
+    border: none;
+    color: #fff;
+    padding: 14px 36px;
+    border-radius: 26px;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  #flash {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 40;
+    opacity: 0;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="menu">
+    <h1>🎯 Atrapa al Villano</h1>
+    <p class="sub">Las cartas se voltean mostrando un rostro por 2 segundos.<br>
+      Haz clic <b>solo</b> en el rostro del villano antes de que desaparezca.<br>
+      No toques a las personas buenas.</p>
+    <div class="legend">
+      <div class="legend-item" id="legendGood"></div>
+      <div class="legend-item" id="legendBad"></div>
+    </div>
+    <p class="sub" style="margin-top:2px;">Elige la duración:</p>
+    <div class="duration-row">
+      <button class="dur-btn" data-t="60">1 min</button>
+      <button class="dur-btn" data-t="120">2 min</button>
+      <button class="dur-btn" data-t="240">4 min</button>
+    </div>
+    <button id="startBtn">JUGAR</button>
+  </div>
+
+  <div id="game" style="display:none; flex:1; display:flex; flex-direction:column;">
+    <div id="hud">
+      <div class="hud-box" id="timeBox">⏱ 60s</div>
+      <div class="hud-box" id="scoreBox">✅ 0</div>
+      <div class="hud-box" id="errBox">❌ 0</div>
+    </div>
+    <div id="gridWrap"><div id="grid"></div></div>
+  </div>
+
+  <div id="endScreen">
+    <h2 id="endTitle">¡Tiempo terminado!</h2>
+    <div class="result-row">
+      <div class="result-item"><div class="num" style="color:#4ade80" id="finalScore">0</div><div class="lab">Aciertos</div></div>
+      <div class="result-item"><div class="num" style="color:#fb7185" id="finalErr">0</div><div class="lab">Errores</div></div>
+    </div>
+    <div class="result-item"><div class="num" id="finalPrecision" style="color:#7dd3fc">0%</div><div class="lab">Precisión</div></div>
+    <button id="restartBtn">JUGAR DE NUEVO</button>
+  </div>
+
+  <svg id="flash" viewBox="0 0 100 100"></svg>
+</div>
+
+<script>
+(function(){
+  const COLS = 4, ROWS = 5, TOTAL = COLS*ROWS;
+  const grid = document.getElementById('grid');
+  const menu = document.getElementById('menu');
+  const game = document.getElementById('game');
+  const endScreen = document.getElementById('endScreen');
+  const timeBox = document.getElementById('timeBox');
+  const scoreBox = document.getElementById('scoreBox');
+  const errBox = document.getElementById('errBox');
+
+  let selectedDuration = 60;
+  let timeLeft = 60;
+  let score = 0, errors = 0;
+  let gameTimerId = null;
+  let spawnTimerId = null;
+  let running = false;
+  let activeFaces = {}; // cellIndex -> {isBad, timeoutId, claimed}
+
+  // ---------------- FACE GENERATION (SVG) ----------------
+  const skinTones = ['#f4c89e', '#e8b083', '#c98a5e', '#8d5a3b', '#ffe0bd'];
+  const hairColors = ['#3b2412', '#1a1a1a', '#6b4226', '#caa472', '#5c5c5c'];
+
+  function rand(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  function rnum(min,max){ return Math.random()*(max-min)+min; }
+
+  function faceBase(skin){
+    return `<ellipse cx="50" cy="55" rx="30" ry="34" fill="${skin}" />`;
+  }
+
+  function goodFace(type){
+    // type: child-m, child-f, adult-m, adult-f, old-m, old-f
+    const skin = rand(skinTones);
+    const hair = rand(hairColors);
+    let extra = '';
+    let earSize = 6;
+    let hairPath = '';
+    let wrinkles = '';
+    let eyebrowY = 42;
+    let mouthPath = `<path d="M37,68 Q50,80 63,68" stroke="#7a3b2e" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+
+    if (type.startsWith('child')) {
+      hairPath = type.endsWith('f')
+        ? `<path d="M20,40 Q50,5 80,40 L80,55 Q75,30 50,28 Q25,30 20,55 Z" fill="${hair}"/>
+           <ellipse cx="22" cy="60" rx="6" ry="14" fill="${hair}"/>
+           <ellipse cx="78" cy="60" rx="6" ry="14" fill="${hair}"/>`
+        : `<path d="M20,42 Q50,8 80,42 L78,50 Q50,30 22,50 Z" fill="${hair}"/>`;
+    } else if (type.startsWith('adult')) {
+      hairPath = type.endsWith('f')
+        ? `<path d="M16,45 Q50,2 84,45 L86,90 Q80,60 50,58 Q20,60 14,90 Z" fill="${hair}"/>`
+        : `<path d="M18,40 Q50,6 82,40 L80,48 Q50,26 20,48 Z" fill="${hair}"/>`;
+    } else { // old
+      wrinkles = `<path d="M30,50 Q35,52 40,50" stroke="#00000022" stroke-width="2" fill="none"/>
+                  <path d="M60,50 Q65,52 70,50" stroke="#00000022" stroke-width="2" fill="none"/>
+                  <path d="M35,75 Q50,78 65,75" stroke="#00000022" stroke-width="2" fill="none"/>`;
+      hairPath = type.endsWith('f')
+        ? `<path d="M16,48 Q50,10 84,48 L82,70 Q75,42 50,40 Q25,42 18,70 Z" fill="#d9d9d9"/>`
+        : `<path d="M22,42 Q50,30 78,42 L76,46 Q50,38 24,46 Z" fill="#d9d9d9"/>
+           <path d="M24,52 Q20,30 50,28 Q80,30 76,52 L74,48 Q50,32 26,48 Z" fill="#d9d9d9"/>`;
+    }
+
+    return `
+      <svg viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="48" fill="#fef3e2"/>
+        ${faceBase(skin)}
+        ${hairPath}
+        ${wrinkles}
+        <ellipse cx="36" cy="${eyebrowY}" rx="6" ry="2" fill="#4a2f1f"/>
+        <ellipse cx="64" cy="${eyebrowY}" rx="6" ry="2" fill="#4a2f1f"/>
+        <circle cx="36" cy="50" r="4" fill="#222"/>
+        <circle cx="64" cy="50" r="4" fill="#222"/>
+        <circle cx="37" cy="49" r="1.2" fill="#fff"/>
+        <circle cx="65" cy="49" r="1.2" fill="#fff"/>
+        <path d="M48,55 Q50,62 52,55" stroke="#00000033" stroke-width="2" fill="none"/>
+        ${mouthPath}
+        <circle cx="22" cy="62" r="6" fill="${skin}" opacity="0.9"/>
+        <circle cx="78" cy="62" r="6" fill="${skin}" opacity="0.9"/>
+      </svg>
+    `;
+  }
+
+  function badFace(gender){
+    const skin = rand(['#d9a571', '#e8b083', '#c98a5e', '#a86a4a']);
+    const hairPath = gender === 'f'
+      ? `<path d="M14,48 Q50,2 86,48 L88,95 Q78,55 50,55 Q22,55 12,95 Z" fill="#1a1a1a"/>`
+      : `<path d="M18,40 Q50,4 82,40 L80,50 Q50,22 20,50 Z" fill="#1a1a1a"/>`;
+    const facialHair = gender === 'm'
+      ? `<path d="M30,70 Q50,62 70,70 Q60,78 50,76 Q40,78 30,70 Z" fill="#1a1a1a"/>
+         <path d="M28,55 Q35,50 42,54" stroke="#1a1a1a" stroke-width="5" fill="none" stroke-linecap="round"/>
+         <path d="M72,55 Q65,50 58,54" stroke="#1a1a1a" stroke-width="5" fill="none" stroke-linecap="round"/>`
+      : '';
+    const eyepatch = Math.random() < 0.5
+      ? `<path d="M20,46 L46,52 L44,60 L18,54 Z" fill="#111"/>
+         <line x1="20" y1="46" x2="80" y2="38" stroke="#111" stroke-width="3"/>`
+      : '';
+
+    return `
+      <svg viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="48" fill="#3a1620"/>
+        ${faceBase(skin)}
+        ${hairPath}
+        <path d="M26,40 L42,46" stroke="#000" stroke-width="4" stroke-linecap="round"/>
+        <path d="M74,40 L58,46" stroke="#000" stroke-width="4" stroke-linecap="round"/>
+        ${eyepatch ? eyepatch : `
+          <ellipse cx="36" cy="52" rx="5" ry="5" fill="#b91c1c"/>
+          <ellipse cx="64" cy="52" rx="5" ry="5" fill="#b91c1c"/>
+          <circle cx="36" cy="52" r="2" fill="#000"/>
+          <circle cx="64" cy="52" r="2" fill="#000"/>
+        `}
+        <path d="M28,40 L44,48" stroke="#7a0000" stroke-width="1.5" opacity="0.6"/>
+        <path d="M58,75 Q50,82 42,75" stroke="#7a0000" stroke-width="1" fill="none" opacity="0.5"/>
+        <path d="M30,72 Q50,90 70,72 Q60,76 50,74 Q40,76 30,72 Z" fill="#0a0a0a"/>
+        <path d="M35,74 L40,82 M45,75 L48,84 M55,75 L52,84 M65,74 L60,82" stroke="#fff" stroke-width="2"/>
+        ${facialHair}
+        <path d="M44,58 L48,63 M56,58 L52,63" stroke="#000" stroke-width="2"/>
+      </svg>
+    `;
+  }
+
+  const goodTypes = ['child-m','child-f','adult-m','adult-f','old-m','old-f'];
+
+  function makeFaceSVG(isBad){
+    if (isBad) return badFace(rand(['m','f']));
+    return goodFace(rand(goodTypes));
+  }
+
+  // legend previews
+  document.getElementById('legendGood').innerHTML = `<svg viewBox="0 0 100 100" style="width:40px;height:40px;border-radius:50%;">${goodFace('adult-m')}</svg><span>Persona buena</span>`;
+  document.getElementById('legendBad').innerHTML = `<svg viewBox="0 0 100 100" style="width:40px;height:40px;border-radius:50%;">${badFace('m')}</svg><span>Villano</span>`;
+
+  // ---------------- GRID SETUP ----------------
+  function buildGrid(){
+    grid.innerHTML = '';
+    for (let i=0;i<TOTAL;i++){
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.dataset.idx = i;
+      card.innerHTML = `
+        <div class="card-inner">
+          <div class="back-side"></div>
+          <div class="face-side"></div>
+        </div>
+      `;
+      card.addEventListener('click', onCardClick);
+      grid.appendChild(card);
+    }
+  }
+
+  function onCardClick(e){
+    const card = e.currentTarget;
+    const idx = card.dataset.idx;
+    const info = activeFaces[idx];
+    if (!info || info.claimed) return; // not active or already resolved
+    info.claimed = true;
+    clearTimeout(info.timeoutId);
+
+    if (info.isBad){
+      score++;
+      card.classList.add('hit-bad-correct');
+      flashScreen('#4ade80', 0.15);
+    } else {
+      errors++;
+      card.classList.add('hit-good-wrong');
+      flashScreen('#fb7185', 0.25);
+    }
+    updateHUD();
+    hideCard(card, idx, 150);
+  }
+
+  function flashScreen(color, opacity){
+    const f = document.getElementById('flash');
+    f.style.background = color;
+    f.style.opacity = opacity;
+    setTimeout(()=>{ f.style.transition = 'opacity 0.3s'; f.style.opacity = 0; }, 60);
+    setTimeout(()=>{ f.style.transition = ''; }, 400);
+  }
+
+  function hideCard(card, idx, delay){
+    setTimeout(()=>{
+      card.classList.remove('flipped');
+      setTimeout(()=>{
+        const faceSide = card.querySelector('.face-side');
+        if (faceSide) {
+          faceSide.innerHTML = '';
+          faceSide.classList.remove('good-bg','bad-bg');
+        }
+        card.classList.remove('hit-bad-correct','hit-good-wrong','hit-bad-missed','hit-good');
+        delete activeFaces[idx];
+      }, 260);
+    }, delay);
+  }
+
+  function spawnFace(){
+    if (!running) return;
+    const emptyIdxs = [];
+    for (let i=0;i<TOTAL;i++){
+      if (!activeFaces[i]) emptyIdxs.push(i);
+    }
+    if (emptyIdxs.length === 0) return;
+    const idx = rand(emptyIdxs);
+    const card = grid.querySelector(`.card[data-idx="${idx}"]`);
+    const isBad = Math.random() < 0.35; // 35% chance villano
+    const faceSide = card.querySelector('.face-side');
+    faceSide.innerHTML = makeFaceSVG(isBad);
+    faceSide.classList.remove('good-bg','bad-bg');
+    faceSide.classList.add(isBad ? 'bad-bg' : 'good-bg');
+    card.classList.add('flipped');
+
+    const timeoutId = setTimeout(()=>{
+      const info = activeFaces[idx];
+      if (info && !info.claimed){
+        info.claimed = true;
+        if (info.isBad){
+          errors++; // no hizo clic al villano
+          card.classList.add('hit-bad-missed');
+          flashScreen('#fb7185', 0.2);
+        } else {
+          card.classList.add('hit-good');
+        }
+        updateHUD();
+        hideCard(card, idx, 80);
+      }
+    }, 2000);
+
+    activeFaces[idx] = { isBad, timeoutId, claimed:false };
+  }
+
+  function updateHUD(){
+    scoreBox.textContent = '✅ ' + score;
+    errBox.textContent = '❌ ' + errors;
+  }
+
+  // ---------------- GAME FLOW ----------------
+  document.querySelectorAll('.dur-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.dur-btn').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedDuration = parseInt(btn.dataset.t,10);
+    });
+  });
+  document.querySelector('.dur-btn[data-t="60"]').classList.add('selected');
+
+  document.getElementById('startBtn').addEventListener('click', startGame);
+  document.getElementById('restartBtn').addEventListener('click', ()=>{
+    endScreen.style.display = 'none';
+    menu.style.display = 'flex';
+  });
+
+  function startGame(){
+    score = 0; errors = 0; timeLeft = selectedDuration;
+    activeFaces = {};
+    buildGrid();
+    updateHUD();
+    timeBox.textContent = '⏱ ' + timeLeft + 's';
+    menu.style.display = 'none';
+    endScreen.style.display = 'none';
+    game.style.display = 'flex';
+    running = true;
+
+    gameTimerId = setInterval(()=>{
+      timeLeft--;
+      timeBox.textContent = '⏱ ' + timeLeft + 's';
+      if (timeLeft <= 0) endGame();
+    }, 1000);
+
+    spawnLoop();
+  }
+
+  function spawnLoop(){
+    if (!running) return;
+    spawnFace();
+    const nextDelay = rnum(650, 1000);
+    spawnTimerId = setTimeout(spawnLoop, nextDelay);
+  }
+
+  function endGame(){
+    running = false;
+    clearInterval(gameTimerId);
+    clearTimeout(spawnTimerId);
+    Object.values(activeFaces).forEach(info => clearTimeout(info.timeoutId));
+    activeFaces = {};
+
+    const total = score + errors;
+    const precision = total > 0 ? Math.round((score/total)*100) : 0;
+    document.getElementById('finalScore').textContent = score;
+    document.getElementById('finalErr').textContent = errors;
+    document.getElementById('finalPrecision').textContent = precision + '%';
+    game.style.display = 'none';
+    endScreen.style.display = 'flex';
+  }
+
+  buildGrid();
+})();
+</script>
+</body>
+</html>
